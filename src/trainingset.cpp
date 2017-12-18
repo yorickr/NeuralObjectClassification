@@ -45,7 +45,18 @@ TrainingSet::TrainingSet(std::string directoryPath) {
 
 }
 
-int TrainingSet::calculate_surface_area(Mat &img) {
-    (void) img;
-    return -1;
+// give this a gray_image
+int TrainingSet::calculate_surface_area(Mat &img, int thresh) {
+    Mat bin;
+    threshold(img, bin, thresh, 255, THRESH_BINARY);
+    vector<vector<Point> > contours;
+    vector<Vec4i> hierarchy;
+    findContours( bin, contours, hierarchy, RETR_TREE, CHAIN_APPROX_SIMPLE, Point(0, 0) );
+    int sum = 0;
+    for( size_t i = 0; i< contours.size(); i++ )
+    {
+        sum+= contourArea(contours[i]);
+    }
+    cout << "Sum is " << sum << endl;
+    return sum;
 }

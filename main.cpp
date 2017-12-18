@@ -64,26 +64,11 @@ int main(int argc, char** argv) {
 	imshow("Gray", gray_image);
 	waitKey(1);
 	Mat bin;
+	Mat bin_inv;
 	int thresh = 60;
 	while (true) {
 		cin >> thresh;
-		threshold(gray_image, bin, thresh, 255, THRESH_BINARY_INV);
-		imshow("Bin", bin*255);
-		Mat canny_output;
-		vector<vector<Point> > contours;
-		vector<Vec4i> hierarchy;
-		Canny( gray_image, canny_output, thresh, thresh*3, 3 );
-		imshow("Canny", canny_output);
-		findContours( canny_output, contours, hierarchy, RETR_TREE, CHAIN_APPROX_SIMPLE, Point(0, 0) );
-		// findContours(bin, contours, RETR_EXTERNAL, CHAIN_APPROX_NONE);
-		Mat drawing = Mat::zeros( canny_output.size(), CV_8UC3 );
-		for( size_t i = 0; i< contours.size(); i++ )
-		{
-			Scalar color = Scalar( rand()%255, rand()%255, rand()%255 );
-			drawContours( drawing, contours, (int)i, color, 2, 8, hierarchy, 0, Point() );
-		}
-		imshow( "Contours", drawing );
-
+		s.calculate_surface_area(gray_image, thresh);
 		waitKey(1);
 	}
 

@@ -21,7 +21,7 @@ public:
 
     vector<tuple<int, Mat>> image_groups;
 
-    int calculate_surface_area(Mat &img);
+    int calculate_surface_area(Mat &img, int thresh);
 
 private:
 
