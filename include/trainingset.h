@@ -12,6 +12,5 @@ class TrainingSet {
     std::vector<string> filePaths;
 
     private:
-    /*Set the directory name as label for this set*/
     void setLabel();
 };
