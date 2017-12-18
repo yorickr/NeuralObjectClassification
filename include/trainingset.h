@@ -20,6 +20,8 @@ public:
     string directoryPath;
     vector<tuple<string, string>> filePaths;
 
+    vector<tuple<int, Mat>> image_groups;
+
     int calculate_surface_area(Mat &img);
 
 private:

@@ -25,13 +25,24 @@ TrainingSet::TrainingSet(std::string directoryPath) {
         }
     }
 
+    string last_label;
+    int count = 0;
     for (auto &m : filePaths) {
-        cout << get<0>(m) << endl; // label
-        cout << get<1>(m) << endl; // file
+        string &label = get<0>(m);
+        string &file_path = get<1>(m);
+        if (count == 0) {
+            last_label = label;
+            count++;
+        }
+        if (strcmp(label.c_str(), last_label.c_str()) != 0) {
+            // cout << "Label and last " << label << " " << last_label << endl;
+            last_label = label;
+            count++;
+        }
+        // cout << file_path << endl;
+        image_groups.push_back(make_tuple(count, imread(file_path)));
     }
 
-
-	// this->setLabel();
 }
 
 /*Set directory name as label of trainingset*/
