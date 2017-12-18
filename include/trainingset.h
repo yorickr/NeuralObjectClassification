@@ -16,7 +16,6 @@ public:
     TrainingSet(std::string directoryPath);
     void loadFiles();
 
-    string label;
     string directoryPath;
     vector<tuple<string, string>> filePaths;
 
@@ -25,6 +24,5 @@ public:
     int calculate_surface_area(Mat &img);
 
 private:
-    /*Set the directory name as label for this set*/
-    void setLabel();
+
 };

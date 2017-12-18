@@ -45,23 +45,6 @@ TrainingSet::TrainingSet(std::string directoryPath) {
 
 }
 
-/*Set directory name as label of trainingset*/
-void TrainingSet::setLabel() {
-	string s = this->directoryPath;
-	string delim = "/";
-	cout << s << endl;
-
-	int start = 0;
-	int end = s.find(delim);
-	while (end != string::npos)
-	{
-		start = end + delim.length();
-		end = s.find(delim, start);
-	}
-	this->label = s.substr(start, end);
-	//cout << "Label is " << this->label << endl;
-}
-
 int TrainingSet::calculate_surface_area(Mat &img) {
     (void) img;
     return -1;
