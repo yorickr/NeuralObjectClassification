@@ -33,3 +33,5 @@
 
 NeuralNetwork
 NeuralObjectClassification
+
+**/*.DS_store
