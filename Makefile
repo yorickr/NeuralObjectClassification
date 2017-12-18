@@ -11,7 +11,7 @@ OBJ_DIR=./
 INC=-I ./
 
 
-LIBS=
+LIBS=$(shell pkg-config --libs --cflags OpenCV)
 
 CXXFLAGS+=$(INC)
 
@@ -19,7 +19,7 @@ SRC=$(shell find . -name "*.cpp")
 
 OBJ=$(patsubst $(SRC_DIR)%.cpp,$(OBJ_DIR)%.o,$(SRC))
 
-EXECUTABLE=NeuralNetwork
+EXECUTABLE=NeuralObjectClassification
 
 release: all
 
