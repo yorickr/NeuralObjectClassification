@@ -62,7 +62,7 @@ TrainingSet::TrainingSet(std::string directoryPath) {
             count++;
         }
         // cout << file_path << endl;
-        image_groups.push_back(make_tuple(count, imread(file_path)));
+        image_groups.push_back(make_tuple(count, imread(file_path, CV_LOAD_IMAGE_COLOR)));
     }
 
 }
@@ -133,4 +133,24 @@ bool TrainingSet::calculate_if_square(Mat &img, int thresh) {
     cout << "Is square? " << square << endl;
     return square;
 
+}
+
+bool TrainingSet::calculate_if_circle(Mat &img, int thresh) {
+    Mat gray_image(img);
+    // GaussianBlur( gray_image, gray_image, Size(9, 9), 2, 2 );
+
+    Mat drawing = Mat::zeros(gray_image.size(), CV_8UC3);
+    vector<Vec3f> circles;
+    HoughCircles(gray_image, circles, HOUGH_GRADIENT, 1, 50, thresh, thresh*3, 30, 100);
+    for( size_t i = 0; i < circles.size(); i++ )
+    {
+        Vec3i c = circles[i];
+        circle( drawing, Point(c[0], c[1]), c[2], Scalar(0,0,255), 3, LINE_AA);
+        circle( drawing, Point(c[0], c[1]), 2, Scalar(0,255,0), 3, LINE_AA);
+    }
+
+    imshow("Found circles", drawing);
+    bool circle = circles.size() > 0;
+    cout << "Is circle? " << circle << endl;
+    return circle;
 }
