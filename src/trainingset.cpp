@@ -1,5 +1,27 @@
 #include "../include/trainingset.h"
 
+
+double angle( Point pt1, Point pt2, Point pt0 )
+{
+    double dx1 = pt1.x - pt0.x;
+    double dy1 = pt1.y - pt0.y;
+    double dx2 = pt2.x - pt0.x;
+    double dy2 = pt2.y - pt0.y;
+    return (dx1*dx2 + dy1*dy2)/sqrt((dx1*dx1 + dy1*dy1)*(dx2*dx2 + dy2*dy2) + 1e-10);
+}
+
+void drawSquares( Mat& image, const vector<vector<Point> >& squares )
+{
+    for( size_t i = 0; i < squares.size(); i++ )
+    {
+        const Point* p = &squares[i][0];
+        int n = (int)squares[i].size();
+        polylines(image, &p, &n, 1, true, Scalar(0,255,0), 3, LINE_AA);
+    }
+
+    imshow("Square", image);
+}
+
 void read_directory(const string& name, vector<string>& v)
 {
     DIR* dirp = opendir(name.c_str());
@@ -51,12 +73,64 @@ int TrainingSet::calculate_surface_area(Mat &img, int thresh) {
     threshold(img, bin, thresh, 255, THRESH_BINARY);
     vector<vector<Point> > contours;
     vector<Vec4i> hierarchy;
-    findContours( bin, contours, hierarchy, RETR_TREE, CHAIN_APPROX_SIMPLE, Point(0, 0) );
+    findContours( bin, contours, hierarchy, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE, Point(0, 0) ); // only find external contours.
+
     int sum = 0;
+    // Mat drawing = Mat::zeros( bin.size(), CV_8UC3 );
     for( size_t i = 0; i< contours.size(); i++ )
     {
+        // Scalar color( rand()&255, rand()&255, rand()&255 );
+        // drawContours( drawing, contours, i, color, FILLED, 8, hierarchy );
         sum+= contourArea(contours[i]);
     }
+    // imshow("Contour", drawing);
     cout << "Sum is " << sum << endl;
     return sum;
+}
+
+
+// give this a gray_image
+bool TrainingSet::calculate_if_square(Mat &img, int thresh) {
+    Mat bin;
+    threshold(img, bin, thresh, 255, THRESH_BINARY);
+    vector<vector<Point> > contours;
+    vector<Vec4i> hierarchy;
+    findContours( bin, contours, hierarchy, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE, Point(0, 0) ); // only find external contours.
+
+    Mat drawing = Mat::zeros( bin.size(), CV_8UC3 );
+    for( size_t i = 0; i< contours.size(); i++ )
+    {
+        Scalar color( rand()&255, rand()&255, rand()&255 );
+        // drawContours( drawing, contours, i, color, FILLED, 8, hierarchy );
+    }
+    // imshow("Contour", drawing);
+
+    vector<Point> approx;
+    vector<vector<Point>> squares;
+
+    // calculate squares.
+    for( size_t i = 0; i < contours.size(); i++ )
+    {
+        approxPolyDP(Mat(contours[i]), approx, arcLength(Mat(contours[i]), true)*0.02, true);
+        if(approx.size() == 4 && fabs(contourArea(Mat(approx))) > 1000 && isContourConvex(Mat(approx)) )
+        {
+            double maxCosine = 0;
+
+            for( int j = 2; j < 5; j++ )
+            {
+                double cosine = fabs(angle(approx[j%4], approx[j-2], approx[j-1]));
+                maxCosine = MAX(maxCosine, cosine);
+            }
+            if( maxCosine < 0.3 )
+                squares.push_back(approx);
+        }
+    }
+
+    // drawing = Mat::zeros( bin.size(), CV_8UC3 );
+
+    // drawSquares(drawing, squares);
+    bool square = squares.size() > 0;
+    cout << "Is square? " << square << endl;
+    return square;
+
 }

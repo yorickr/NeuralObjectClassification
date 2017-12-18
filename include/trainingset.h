@@ -22,6 +22,7 @@ public:
     vector<tuple<int, Mat>> image_groups;
 
     int calculate_surface_area(Mat &img, int thresh);
+    bool calculate_if_square(Mat &img, int thresh);
 
 private:
 
