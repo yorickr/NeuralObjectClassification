@@ -1,12 +1,11 @@
 #pragma once
 
-#include <string>
-#include <vector>
+#include "includes.h"
 
 class TrainingSet {
     public:
     TrainingSet(std::string directoryPath);
-    loadFiles();
+    void loadFiles();
 
     std::string label;
     std::string directoryPath;
@@ -15,4 +14,4 @@ class TrainingSet {
     private:
     /*Set the directory name as label for this set*/
     void setLabel();
-}
+};

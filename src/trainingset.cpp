@@ -1,4 +1,4 @@
-#include "trainingset.h"
+#include "../include/trainingset.h"
 
 TrainingSet::TrainingSet(std::string directoryPath) {
     this->directoryPath = directoryPath;
