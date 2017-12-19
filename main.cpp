@@ -53,30 +53,32 @@ int main(int argc, char** argv) {
 	}
 
 	TrainingSet s("./images/training_plaatjes/");
+	pair<Matrix,Matrix> out = s.compute();
+	cout << out.first << endl;
 	// Mat img = imread("./images/training_plaatjes/dobbelsteen/dobbelsteen_0.jpg");
-	Mat img = imread("./images/training_plaatjes/muntje/muntje_0.jpg");
-	// Mat img = get<1>(s.image_groups.at(0));
-	if (!img.data)
-	{
-		cout << "Could not open or find the image" << endl;
-		return -1;
-	}
-	imshow("Image", img);
-	Mat gray_image;
-	cvtColor(img, gray_image, CV_BGR2GRAY);
-	imshow("Gray", gray_image);
-	waitKey(1);
+	// Mat img = imread("./images/training_plaatjes/muntje/muntje_0.jpg");
+	// Mat img = s.image_groups.at(0).images.at(0);
+	// if (!img.data)
+	// {
+	// 	cout << "Could not open or find the image" << endl;
+	// 	return -1;
+	// }
+	// imshow("Image", img);
+	// Mat gray_image;
+	// cvtColor(img, gray_image, CV_BGR2GRAY);
+	// imshow("Gray", gray_image);
+	// waitKey(1);
 
-	int thresh = 60;
-	while (true) {
-		cin >> thresh;
-
-
-		s.calculate_if_circle(gray_image, thresh);
-		s.calculate_if_square(gray_image, thresh);
-		s.calculate_surface_area(gray_image, thresh);
-		waitKey(1);
-	}
+	// int thresh = 60;
+	// while (true) {
+	// 	cin >> thresh;
+	//
+	//
+	// 	s.calculate_if_circle(gray_image, thresh);
+	// 	s.calculate_if_square(gray_image, thresh);
+	// 	s.calculate_surface_area(gray_image, thresh);
+	// 	waitKey(1);
+	// }
 
 	// s.calculate_surface_area(img);
 

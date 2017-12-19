@@ -1,8 +1,7 @@
 #include "../include/trainingset.h"
 
 
-double angle( Point pt1, Point pt2, Point pt0 )
-{
+double angle( Point pt1, Point pt2, Point pt0 ) {
     double dx1 = pt1.x - pt0.x;
     double dy1 = pt1.y - pt0.y;
     double dx2 = pt2.x - pt0.x;
@@ -10,8 +9,7 @@ double angle( Point pt1, Point pt2, Point pt0 )
     return (dx1*dx2 + dy1*dy2)/sqrt((dx1*dx1 + dy1*dy1)*(dx2*dx2 + dy2*dy2) + 1e-10);
 }
 
-void drawSquares( Mat& image, const vector<vector<Point> >& squares )
-{
+void drawSquares( Mat& image, const vector<vector<Point> >& squares ) {
     for( size_t i = 0; i < squares.size(); i++ )
     {
         const Point* p = &squares[i][0];
@@ -22,8 +20,7 @@ void drawSquares( Mat& image, const vector<vector<Point> >& squares )
     imshow("Square", image);
 }
 
-void read_directory(const string& name, vector<string>& v)
-{
+void read_directory(const string& name, vector<string>& v) {
     DIR* dirp = opendir(name.c_str());
     struct dirent * dp;
     while ((dp = readdir(dirp)) != NULL) {
@@ -32,6 +29,13 @@ void read_directory(const string& name, vector<string>& v)
         }
     }
     closedir(dirp);
+}
+
+SetEntry::SetEntry(int id, int threshold_value, string label, vector<Mat> images) {
+    this->id = id;
+    this->threshold_value = threshold_value;
+    this->images = images;
+    this->label = label;
 }
 
 TrainingSet::TrainingSet(std::string directoryPath) {
@@ -49,6 +53,7 @@ TrainingSet::TrainingSet(std::string directoryPath) {
 
     string last_label;
     int count = 0;
+    vector<Mat> images;
     for (auto &m : filePaths) {
         string &label = get<0>(m);
         string &file_path = get<1>(m);
@@ -58,13 +63,51 @@ TrainingSet::TrainingSet(std::string directoryPath) {
         }
         if (strcmp(label.c_str(), last_label.c_str()) != 0) {
             // cout << "Label and last " << label << " " << last_label << endl;
+            int thresh = 25;
+            image_groups.push_back(SetEntry(count, thresh, label, images)); // pass a copy;
+            images.clear();
+
             last_label = label;
             count++;
         }
-        // cout << file_path << endl;
-        image_groups.push_back(make_tuple(count, imread(file_path, CV_LOAD_IMAGE_COLOR)));
+        images.push_back(imread(file_path, CV_LOAD_IMAGE_COLOR));
     }
 
+}
+
+pair<Matrix, Matrix> TrainingSet::compute() {
+    int amount_of_features = 3;
+    int amount_of_images = image_groups.size() * image_groups.at(0).images.size();
+    Matrix input_set(amount_of_images, amount_of_features);
+    Matrix output_set(3,3);
+    int i = 0;
+    for (SetEntry &m : image_groups) {
+        cout << "Going through SetEntry " << m.label << " " << m.id << " which has a thresh value of " << m.threshold_value << endl;
+        int count = 0;
+        for (Mat &img: m.images) {
+            cout << "Image " << count << endl;
+            cout << "circle\t---\tsquare\t---\tsurface_area\t---" << endl;
+            cout << "----------------------------------------------------" << endl;
+            Mat gray_image;
+        	cvtColor(img, gray_image, CV_BGR2GRAY);
+            bool circle = calculate_if_circle(gray_image, m.threshold_value);
+            bool square = calculate_if_square(gray_image, m.threshold_value);
+            int surface_area = calculate_surface_area(gray_image, m.threshold_value);
+            cout << circle << "\t\t" << square << "\t\t" << surface_area << endl;
+            cout << "----------------------------------------------------" << endl;
+            cout << endl;
+            count++;
+
+            // add to input_set
+            input_set[i][0] = (float) circle;
+            input_set[i][1] = (float) square;
+            input_set[i][2] = (float) surface_area;
+
+            i++;
+        }
+        cout << endl << endl;
+    }
+    return make_pair(input_set, output_set);
 }
 
 // give this a gray_image
@@ -84,7 +127,7 @@ int TrainingSet::calculate_surface_area(Mat &img, int thresh) {
         sum+= contourArea(contours[i]);
     }
     // imshow("Contour", drawing);
-    cout << "Sum is " << sum << endl;
+    // cout << "Sum is " << sum << endl;
     return sum;
 }
 
@@ -130,7 +173,7 @@ bool TrainingSet::calculate_if_square(Mat &img, int thresh) {
 
     // drawSquares(drawing, squares);
     bool square = squares.size() > 0;
-    cout << "Is square? " << square << endl;
+    // cout << "Is square? " << square << endl;
     return square;
 
 }
@@ -139,18 +182,18 @@ bool TrainingSet::calculate_if_circle(Mat &img, int thresh) {
     Mat gray_image(img);
     // GaussianBlur( gray_image, gray_image, Size(9, 9), 2, 2 );
 
-    Mat drawing = Mat::zeros(gray_image.size(), CV_8UC3);
+    // Mat drawing = Mat::zeros(gray_image.size(), CV_8UC3);
     vector<Vec3f> circles;
     HoughCircles(gray_image, circles, HOUGH_GRADIENT, 1, 50, thresh, thresh*3, 30, 100);
     for( size_t i = 0; i < circles.size(); i++ )
     {
         Vec3i c = circles[i];
-        circle( drawing, Point(c[0], c[1]), c[2], Scalar(0,0,255), 3, LINE_AA);
-        circle( drawing, Point(c[0], c[1]), 2, Scalar(0,255,0), 3, LINE_AA);
+        // circle( drawing, Point(c[0], c[1]), c[2], Scalar(0,0,255), 3, LINE_AA);
+        // circle( drawing, Point(c[0], c[1]), 2, Scalar(0,255,0), 3, LINE_AA);
     }
 
-    imshow("Found circles", drawing);
+    // imshow("Found circles", drawing);
     bool circle = circles.size() > 0;
-    cout << "Is circle? " << circle << endl;
+    // cout << "Is circle? " << circle << endl;
     return circle;
 }
