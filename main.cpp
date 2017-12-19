@@ -10,8 +10,6 @@
 
 using namespace std;
 
-
-
 int main(int argc, char** argv) {
 	srand(time(NULL));
 	cout << boolalpha;
@@ -21,50 +19,109 @@ int main(int argc, char** argv) {
 	}
 
 	cout << endl;
-	size_t size_input = 2;
-	size_t size_hidden = 5;
-	size_t size_output = 1;
-
-	// 0 0 		0
-	// 0 1 		0
-	// 1 0 		0
-	// 1 1 		1
-	Matrix input(4, size_input);
-	input.mat[1][1] = 1;
-	input.mat[2][0] = 1;
-	input.mat[3][0] = 1;
-	input.mat[3][1] = 1;
-	cout << endl << endl;
-	cout << "Training input" << endl << input << endl;
-
-	Matrix output(4, size_output);
-	output.mat[3][0] = 1;
-	cout << "Training expected output" << endl << output << endl;
-
-	BPN bpn(input, output, size_hidden);
+	// size_t size_input = 5;
+	// size_t size_hidden = 2;
+	// size_t size_output = 10;
+	//
+	// // 	0,	1,	20724,	126,	179,
+	// // 	0,	1,	21354,	181,	129,
+	// // 	0,	1,	22377,	131,	181,
+	// Matrix input(4, size_input);
+	//
+	// input[0][0] = 0;
+	// input[0][1] = 1;
+	// input[0][2] = 20724;
+	// input[0][3] = 126;
+	// input[0][4] = 179;
+	//
+	// input[1][0] = 0;
+	// input[1][1] = 1;
+	// input[1][2] = 21354;
+	// input[1][3] = 181;
+	// input[1][4] = 129;
+	//
+	// input[2][0] = 0;
+	// input[2][1] = 1;
+	// input[2][2] = 22377;
+	// input[2][3] = 131;
+	// input[2][4] = 181;
+	//
+	// input[3][0] = 0;
+	// input[3][1] = 1;
+	// input[3][2] = 22276;
+	// input[3][3] = 133;
+	// input[3][4] = 129;
+	//
+	// cout << endl << endl;
+	// cout << "Training input" << endl << input << endl;
+	//
+	// // 		1,	0,	0,	0,	0,	0,	0,	0,	0,	0,
+	// // 		1,	0,	0,	0,	0,	0,	0,	0,	0,	0,
+	// // 		1,	0,	0,	0,	0,	0,	0,	0,	0,	0,
+	// // 		1,	0,	0,	0,	0,	0,	0,	0,	0,	0,
+	// Matrix output(4, size_output);
+	// for (size_t row = 0; row < output.rows; row++) {
+	// 	output[row][0] = 1;
+	// }
+	// cout << "Training expected output" << endl << output << endl;
+	//
+	// BPN bpn(input, output, size_hidden);
 	// cout << bpn << endl;
-
+	//
 	// bpn.train(10000);
-	// cout << bpn << endl;
-
-	for (size_t row = 0; row < input.rows; row++) {
-		Matrix r(input[row], true); // transpose
-		// bpn.guess(r);
-	}
+	//
+	// for (size_t row = 0; row < input.rows; row++) {
+	// 	Matrix r(input[row], true); // transpose
+	// 	bpn.guess(r);
+	// }
 
 	TrainingSet s("./images/training_plaatjes/");
-	pair<Matrix,Matrix> out = s.compute();
-	cout << out.first << endl;
-	cout << out.second << endl;
-	BPN guesser(out.first, out.second, 3);
-	// cout << guesser << endl;
-	bpn.train(100000);
-	for (size_t row = 0; row < 2; row++) {
-		Matrix r(out.first[row], true);
-		cout << "Input is " << endl;
-		cout << r.transpose() << endl;
-		guesser.guess(r);
+	pair<Mat,Mat> out = s.compute();
+	Mat input = out.first;
+	Mat output = out.second;
+	cout << "Input testset" << endl;
+	cout << input << endl;
+	cout << "Output testset" << endl;
+	cout << output << endl;
+	int networkInputSize = input.cols;
+	int networkOutputSize = output.cols;
+	Ptr<ml::ANN_MLP> mlp = ml::ANN_MLP::create();
+	vector<int> layerSizes = { networkInputSize, 4, networkOutputSize };
+	mlp->setLayerSizes(layerSizes);
+	mlp->setActivationFunction(ml::ANN_MLP::SIGMOID_SYM);
+	mlp->train(input, ml::ROW_SAMPLE, output);
+
+	cin.ignore();
+	for (size_t row = 0; row < input.rows; row++) {
+		Mat r = Mat::zeros( Size(input.cols, 1), CV_32F);
+		// cout << "input" << endl << input << endl;
+		for (size_t j = 0; j < input.cols; j++) {
+			float val = input.at<float>(row, j);
+			r.at<float>(0, j) = val;
+		}
+		cout << r << endl;
+		Mat outp;
+		mlp->predict(r, outp);
+		cout << outp << endl;
+
+		cin.ignore();
 	}
+
+	// Matrix input = out.first;
+	// Matrix output = out.second;
+	// cout << "Training input" << endl << input << endl;
+	// cout << "Training output" << endl << output << endl;
+	// BPN guesser(input, output, 10);
+	// cout << guesser << endl;
+	// guesser.train(1000);
+	// cin.ignore();
+	// for (size_t row = 0; row < input.rows; row++) {
+	// 	Matrix r(input[row], true);
+	// 	cout << "Input is " << endl;
+	// 	cout << r.transpose() << endl;
+	// 	guesser.guess(r);
+	// 	cout << endl;
+	// }
 
 	return 0;
 }

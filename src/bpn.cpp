@@ -66,7 +66,6 @@ void BPN::adapt_values_and_weights(Matrix &current_training_output, Matrix &curr
         deltas[row][0] = delta_i;
     }
 
-
     Matrix why = output_of_hidden_layer * deltas.transpose();
     // TODO: use ETHA and ALPHA
     double ALPHA = 1;
@@ -118,16 +117,13 @@ bool BPN::train(unsigned int MAX_RUNS) {
         for (size_t row_nr = 0; row_nr < expected_input.rows; row_nr++) {
             Matrix current_training_input(expected_input.mat.at(row_nr), true); // also transposes
             Matrix current_training_output(expected_output.mat.at(row_nr), true); // also transposes
-            // cout << "Training input" << endl << current_training_input;
-            // cout << "Training output" << endl << current_training_output << endl;
+            // cout << "Training input" << endl << current_training_input.transpose();
+            // cout << "Training output" << endl << current_training_output.transpose() << endl;
             Matrix output_of_hidden_layer = calculate_output_hidden_layer(current_training_input, matrices.at(0));
-            // cout << "Output of hidden layer " << endl << output_of_hidden_layer << endl;
+            // cout << "Output of hidden layer " << endl << output_of_hidden_layer.transpose() << endl;
 
             Matrix output_of_output_layer = calculate_output_output_layer(output_of_hidden_layer, matrices.at(1));
-            // cout << "Output of output layer " << endl << output_of_output_layer << endl;
-
-            // cout << "Output of outputlayer" << endl;
-            // cout << output_of_output_layer << endl;
+            // cout << "Output of output layer " << endl << output_of_output_layer.transpose() << endl;
 
             // cout << "Pre" << endl;
 			// cout << new_value_m << endl << new_weight_m << endl;
@@ -140,10 +136,8 @@ bool BPN::train(unsigned int MAX_RUNS) {
             // cout << new_value_m << endl << new_weight_m << endl;
             error_output_first = calculate_output_error(current_training_output, output_of_output_layer);
 
-            // func
-            // II is IT, V1 W1
             Matrix output_of_hidden_layer_second = calculate_output_hidden_layer(current_training_input, new_value_m);
-            Matrix output_of_output_layer_second = calculate_output_output_layer(output_of_hidden_layer, new_weight_m);
+            Matrix output_of_output_layer_second = calculate_output_output_layer(output_of_hidden_layer_second, new_weight_m);
             // use second output_of_output_layer with calculate_output_error
 
             error_output_second = calculate_output_error(current_training_output, output_of_output_layer_second);
@@ -151,6 +145,7 @@ bool BPN::train(unsigned int MAX_RUNS) {
             error_diff += (error_output_second - error_output_first) * (error_output_second - error_output_first);
             matrices.at(0) = new_value_m;
             matrices.at(1) = new_weight_m;
+            // cin.ignore();
             // cout << "--------" << endl;
         }
         cout << "Run: " << runs << " error is " << error_diff << endl;
@@ -164,14 +159,11 @@ double BPN::guess(Matrix &input_row) {
     Matrix output_of_hidden_layer = calculate_output_hidden_layer(input_row, matrices.at(0));
     Matrix output_of_output_layer = calculate_output_output_layer(output_of_hidden_layer, matrices.at(1));
     cout << "My guess" << endl;
-    cout << output_of_output_layer.transpose() << endl;
-    // for (size_t i = 0; i < output_of_output_layer.rows; i++) {
-    //     for (size_t j = 0; j < output_of_output_layer.cols; j++) {
-    //         double val = output_of_output_layer[i][j];
-    //         cout << val;
-    //     }
-    //     cout << endl;
-    // }
+    // cout << output_of_output_layer << endl;
+    for (int row = output_of_output_layer.rows-1; row >= 0; row--) {
+        cout << output_of_output_layer[row][0] << "\t";
+    }
+    cout << endl;
 
     return 0.0f;
 }

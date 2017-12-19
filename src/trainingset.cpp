@@ -94,36 +94,49 @@ string TrainingSet::get_label(int i) {
     return "";
 }
 
-pair<Matrix, Matrix> TrainingSet::compute() {
-    int amount_of_features = 3;
+pair<Mat, Mat> TrainingSet::compute() {
+    int amount_of_features = 5;
     int amount_of_objects = image_groups.size();
     int amount_of_images = amount_of_objects * image_groups.at(0).images.size();
 
-    Matrix input_set(amount_of_images, amount_of_features);
-    Matrix output_set(amount_of_images, amount_of_objects);
+    // Matrix input_set(amount_of_images, amount_of_features);
+    // Matrix output_set(amount_of_images, amount_of_objects);
+    Mat input_set = Mat::zeros( Size(amount_of_features, amount_of_images), CV_32F);
+    Mat output_set = Mat::zeros( Size(amount_of_objects, amount_of_images), CV_32F);
     int i = 0;
     for (SetEntry &m : image_groups) {
         // cout << "Going through SetEntry " << m.label << " " << m.id << " which has a thresh value of " << m.threshold_value << endl;
         int count = 0;
         for (Mat &img: m.images) {
-            // cout << "Image " << count << endl;
-            // cout << "circle\t---\tsquare\t---\tsurface_area\t---" << endl;
-            // cout << "----------------------------------------------------" << endl;
             Mat gray_image;
         	cvtColor(img, gray_image, CV_BGR2GRAY);
             bool circle = calculate_if_circle(gray_image, m.threshold_value);
             bool square = calculate_if_square(gray_image, m.threshold_value);
             int surface_area = calculate_surface_area(gray_image, m.threshold_value);
-            // cout << circle << "\t\t" << square << "\t\t" << surface_area << endl;
+            int length = calculate_length(gray_image, m.threshold_value);
+            int width = calculate_width(gray_image, m.threshold_value);
+            // cout << "Image " << count << endl;
+            // cout << "circle\t---\tsquare\t---\tsurface_area\t---\tlength\t---\twidth" << endl;
+            // cout << "----------------------------------------------------" << endl;
+            // cout << circle << "\t\t" << square << "\t\t" << surface_area << "\t\t\t" << length << "\t\t" << width << endl;
             // cout << "----------------------------------------------------" << endl;
             // cout << endl;
 
 
             // add to input_set
-            input_set[i][0] = (double) circle;
-            input_set[i][1] = (double) square;
-            input_set[i][2] = (double) surface_area;
-            output_set[i][m.id] = 1;
+            input_set.at<float>(i, 0) = (float) circle;
+            input_set.at<float>(i, 1) = (float) square;
+            input_set.at<float>(i, 2) = (float) surface_area;
+            input_set.at<float>(i, 3) = (float) length;
+            input_set.at<float>(i, 4) = (float) width;
+            output_set.at<float>(i, m.id) = (float) 1;
+
+            // input_set[i][0] = (double) circle;
+            // input_set[i][1] = (double) square;
+            // input_set[i][2] = (double) surface_area;
+            // input_set[i][3] = (double) length;
+            // input_set[i][4] = (double) width;
+            // output_set[i][m.id] = 1;
 
             i++;
             count++;
@@ -206,12 +219,12 @@ bool TrainingSet::calculate_if_circle(Mat &img, int thresh) {
     // Mat drawing = Mat::zeros(gray_image.size(), CV_8UC3);
     vector<Vec3f> circles;
     HoughCircles(gray_image, circles, HOUGH_GRADIENT, 1, 50, thresh, thresh*3, 30, 100);
-    for( size_t i = 0; i < circles.size(); i++ )
-    {
-        Vec3i c = circles[i];
+    // for( size_t i = 0; i < circles.size(); i++ )
+    // {
+        // Vec3i c = circles[i];
         // circle( drawing, Point(c[0], c[1]), c[2], Scalar(0,0,255), 3, LINE_AA);
         // circle( drawing, Point(c[0], c[1]), 2, Scalar(0,255,0), 3, LINE_AA);
-    }
+    // }
 
     // imshow("Found circles", drawing);
     bool circle = circles.size() > 0;
@@ -227,7 +240,7 @@ int TrainingSet::calculate_length(Mat & img, int thresh)
 	vector<vector<Point> > contours;
 	vector<Vec4i> hierarchy;
 	findContours(bin, contours, hierarchy, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE, Point(0, 0));
-	
+
 	auto contour = getGreatestVector(contours);
 	RotatedRect boundaryRotatedBox = minAreaRect(contour);
 

@@ -22,7 +22,7 @@ public:
     Matrix expected_input;
     Matrix expected_output;
 
-    double EPSILON = 1E-20;
+    double EPSILON = 1E-10;
 
     BPN(Matrix input, Matrix output, size_t hidden);
 

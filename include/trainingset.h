@@ -31,7 +31,7 @@ public:
 
     vector<SetEntry> image_groups;
 
-    pair<Matrix, Matrix> compute();
+    pair<Mat, Mat> compute();
 
     string get_label(int i);
 
@@ -40,8 +40,8 @@ public:
     bool calculate_if_square(Mat &img, int thresh);
     bool calculate_if_circle(Mat &img, int thresh);
 
-	  int calculate_length(Mat &img, int thresh);
-	  int calculate_width(Mat &img, int thresh);
+    int calculate_length(Mat &img, int thresh);
+    int calculate_width(Mat &img, int thresh);
 
 
 private:
