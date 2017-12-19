@@ -14,7 +14,6 @@
 class TrainingSet {
 public:
     TrainingSet(std::string directoryPath);
-    void loadFiles();
 
     string directoryPath;
     vector<tuple<string, string>> filePaths;
@@ -22,6 +21,7 @@ public:
     vector<tuple<int, Mat>> image_groups;
 
     int calculate_surface_area(Mat &img, int thresh);
+	int calculate_length(Mat &img, int thresh);
 
 private:
 

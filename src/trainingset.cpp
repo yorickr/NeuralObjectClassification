@@ -12,6 +12,16 @@ void read_directory(const string& name, vector<string>& v)
     closedir(dirp);
 }
 
+bool less_by_x(const cv::Point& lhs, const cv::Point& rhs)
+{
+	return lhs.x < rhs.x;
+}
+
+bool less_by_y(const cv::Point& lhs, const cv::Point& rhs)
+{
+	return lhs.y < rhs.y;
+}
+
 TrainingSet::TrainingSet(std::string directoryPath) {
     this->directoryPath = directoryPath;
 
@@ -59,4 +69,19 @@ int TrainingSet::calculate_surface_area(Mat &img, int thresh) {
     }
     cout << "Sum is " << sum << endl;
     return sum;
+}
+
+int TrainingSet::calculate_length(Mat & img, int thresh)
+{
+	Mat bin;
+	threshold(img, bin, thresh, 255, THRESH_BINARY);
+
+	vector<vector<Point> > contours;
+	vector<Vec4i> hierarchy;
+	findContours(bin, contours, hierarchy, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE, Point(0, 0));
+	
+	auto contour = contours[0];
+	RotatedRect boundaryRotatedBox = minAreaRect(contour);
+
+	return boundaryRotatedBox.size.height;
 }
