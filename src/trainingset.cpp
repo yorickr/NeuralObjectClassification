@@ -38,6 +38,17 @@ SetEntry::SetEntry(int id, int threshold_value, string label, vector<Mat> images
     this->label = label;
 }
 
+bool greatestVector(const vector<cv::Point>& lhs, const vector<cv::Point>& rhs)
+{
+	return lhs.size() < rhs.size();
+}
+
+vector<Point> getGreatestVector(vector<vector<Point>> vectors) {
+	auto result = max_element(vectors.begin(), vectors.end(), greatestVector);
+	return vectors[distance(vectors.begin(), result)];
+
+}
+
 TrainingSet::TrainingSet(std::string directoryPath) {
     this->directoryPath = directoryPath;
 
@@ -143,7 +154,6 @@ int TrainingSet::calculate_surface_area(Mat &img, int thresh) {
     return sum;
 }
 
-
 // give this a gray_image
 bool TrainingSet::calculate_if_square(Mat &img, int thresh) {
     Mat bin;
@@ -187,7 +197,6 @@ bool TrainingSet::calculate_if_square(Mat &img, int thresh) {
     bool square = squares.size() > 0;
     // cout << "Is square? " << square << endl;
     return square;
-
 }
 
 bool TrainingSet::calculate_if_circle(Mat &img, int thresh) {
@@ -208,4 +217,34 @@ bool TrainingSet::calculate_if_circle(Mat &img, int thresh) {
     bool circle = circles.size() > 0;
     // cout << "Is circle? " << circle << endl;
     return circle;
+}
+
+int TrainingSet::calculate_length(Mat & img, int thresh)
+{
+	Mat bin;
+	threshold(img, bin, thresh, 255, THRESH_BINARY);
+
+	vector<vector<Point> > contours;
+	vector<Vec4i> hierarchy;
+	findContours(bin, contours, hierarchy, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE, Point(0, 0));
+	
+	auto contour = getGreatestVector(contours);
+	RotatedRect boundaryRotatedBox = minAreaRect(contour);
+
+	return boundaryRotatedBox.size.height;
+}
+
+int TrainingSet::calculate_width(Mat & img, int thresh)
+{
+	Mat bin;
+	threshold(img, bin, thresh, 255, THRESH_BINARY);
+
+	vector<vector<Point> > contours;
+	vector<Vec4i> hierarchy;
+	findContours(bin, contours, hierarchy, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE, Point(0, 0));
+
+	auto contour = getGreatestVector(contours);
+	RotatedRect boundaryRotatedBox = minAreaRect(contour);
+
+	return boundaryRotatedBox.size.width;
 }

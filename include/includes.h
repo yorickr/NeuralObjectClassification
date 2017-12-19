@@ -21,7 +21,7 @@
 #include <time.h>
 
 #include <sys/types.h>
-#include <dirent.h>
+#include "../include/dirent.h"
 
 using namespace std;
 
