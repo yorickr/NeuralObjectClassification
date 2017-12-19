@@ -12,14 +12,14 @@ void read_directory(const string& name, vector<string>& v)
     closedir(dirp);
 }
 
-bool less_by_x(const cv::Point& lhs, const cv::Point& rhs)
+bool greatestVector(const vector<cv::Point>& lhs, const vector<cv::Point>& rhs)
 {
-	return lhs.x < rhs.x;
+	return lhs.size() < rhs.size();
 }
 
-bool less_by_y(const cv::Point& lhs, const cv::Point& rhs)
-{
-	return lhs.y < rhs.y;
+vector<Point> getGreatestVector(vector<vector<Point>> vectors) {
+	auto result = max_element(vectors.begin(), vectors.end(), greatestVector);
+	return vectors[distance(vectors.begin(), result)];
 }
 
 TrainingSet::TrainingSet(std::string directoryPath) {
@@ -80,8 +80,24 @@ int TrainingSet::calculate_length(Mat & img, int thresh)
 	vector<Vec4i> hierarchy;
 	findContours(bin, contours, hierarchy, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE, Point(0, 0));
 	
-	auto contour = contours[0];
+	auto contour = getGreatestVector(contours);
 	RotatedRect boundaryRotatedBox = minAreaRect(contour);
 
 	return boundaryRotatedBox.size.height;
 }
+
+int TrainingSet::calculate_width(Mat & img, int thresh)
+{
+	Mat bin;
+	threshold(img, bin, thresh, 255, THRESH_BINARY);
+
+	vector<vector<Point> > contours;
+	vector<Vec4i> hierarchy;
+	findContours(bin, contours, hierarchy, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE, Point(0, 0));
+
+	auto contour = getGreatestVector(contours);
+	RotatedRect boundaryRotatedBox = minAreaRect(contour);
+
+	return boundaryRotatedBox.size.width;
+}
+

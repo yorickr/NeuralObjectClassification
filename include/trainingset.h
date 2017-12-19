@@ -22,6 +22,7 @@ public:
 
     int calculate_surface_area(Mat &img, int thresh);
 	int calculate_length(Mat &img, int thresh);
+	int calculate_width(Mat &img, int thresh);
 
 private:
 
