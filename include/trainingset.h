@@ -30,10 +30,12 @@ class TrainingSet {
 		vector<tuple<string, string>> filePaths;
 
 		vector<SetEntry> image_groups;
+        vector<Mat> imgs;
 
-    pair<Mat, Mat> compute();
+        pair<Mat, Mat> compute();
 
-		string get_label(int i);
+        Mat get_image(int i);
+        string get_label(int i);
 
 		int calculate_surface_area(Mat &img, int thresh);
 

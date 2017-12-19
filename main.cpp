@@ -103,6 +103,19 @@ int main(int argc, char** argv) {
 		Mat outp;
 		mlp->predict(r, outp);
 		cout << outp << endl;
+		float max = numeric_limits<float>::min();
+		size_t max_index = 0;
+		for (size_t i = 0; i < outp.cols; i++) {
+			float val = outp.at<float>(0, i);
+			if (val > max) {
+				max = val;
+				max_index = i;
+			}
+		}
+		cout << "There is a " << (max * 100) << "% chance that this is a " << s.get_label(max_index) << endl;
+		cout << "Showing you the image" << endl;
+		imshow("Object", s.get_image(row));
+		waitKey(30);
 
 		cin.ignore();
 	}

@@ -77,7 +77,9 @@ TrainingSet::TrainingSet(std::string directoryPath) {
             last_label = label;
             count++;
         }
-        images.push_back(imread(file_path, CV_LOAD_IMAGE_COLOR));
+        Mat imag = imread(file_path, CV_LOAD_IMAGE_COLOR);
+        images.push_back(imag);
+        imgs.push_back(imag);
     }
     // catch the final one.
     int thresh = 25;
@@ -93,8 +95,12 @@ string TrainingSet::get_label(int i) {
     return "";
 }
 
+Mat TrainingSet::get_image(int i) {
+    return imgs.at(i);
+}
+
 pair<Mat, Mat> TrainingSet::compute() {
-    int amount_of_features = 5;
+    int amount_of_features = 6;
     int amount_of_objects = image_groups.size();
     int amount_of_images = amount_of_objects * image_groups.at(0).images.size();
 
@@ -114,6 +120,7 @@ pair<Mat, Mat> TrainingSet::compute() {
             int surface_area = calculate_surface_area(gray_image, m.threshold_value);
             int length = calculate_length(gray_image, m.threshold_value);
             int width = calculate_width(gray_image, m.threshold_value);
+            double bending_energy = calculate_bending_energy(gray_image, m.threshold_value);
             // cout << "Image " << count << endl;
             // cout << "circle\t---\tsquare\t---\tsurface_area\t---\tlength\t---\twidth" << endl;
             // cout << "----------------------------------------------------" << endl;
@@ -128,6 +135,7 @@ pair<Mat, Mat> TrainingSet::compute() {
             input_set.at<float>(i, 2) = (float) surface_area;
             input_set.at<float>(i, 3) = (float) length;
             input_set.at<float>(i, 4) = (float) width;
+            input_set.at<float>(i, 5) = bending_energy;
             output_set.at<float>(i, m.id) = (float) 1;
 
             // input_set[i][0] = (double) circle;
