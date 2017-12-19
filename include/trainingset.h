@@ -33,6 +33,8 @@ public:
 
     pair<Matrix, Matrix> compute();
 
+    string get_label(int i);
+
     int calculate_surface_area(Mat &img, int thresh);
     bool calculate_if_square(Mat &img, int thresh);
     bool calculate_if_circle(Mat &img, int thresh);

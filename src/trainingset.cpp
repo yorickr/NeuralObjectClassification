@@ -74,6 +74,15 @@ TrainingSet::TrainingSet(std::string directoryPath) {
 
 }
 
+string TrainingSet::get_label(int i) {
+    for (SetEntry &s : image_groups) {
+        if (s.id == i) {
+            return s.label;
+        }
+    }
+    return "";
+}
+
 pair<Matrix, Matrix> TrainingSet::compute() {
     int amount_of_features = 3;
     int amount_of_objects = image_groups.size();
@@ -83,32 +92,32 @@ pair<Matrix, Matrix> TrainingSet::compute() {
     Matrix output_set(amount_of_images, amount_of_objects);
     int i = 0;
     for (SetEntry &m : image_groups) {
-        cout << "Going through SetEntry " << m.label << " " << m.id << " which has a thresh value of " << m.threshold_value << endl;
+        // cout << "Going through SetEntry " << m.label << " " << m.id << " which has a thresh value of " << m.threshold_value << endl;
         int count = 0;
         for (Mat &img: m.images) {
-            cout << "Image " << count << endl;
-            cout << "circle\t---\tsquare\t---\tsurface_area\t---" << endl;
-            cout << "----------------------------------------------------" << endl;
+            // cout << "Image " << count << endl;
+            // cout << "circle\t---\tsquare\t---\tsurface_area\t---" << endl;
+            // cout << "----------------------------------------------------" << endl;
             Mat gray_image;
         	cvtColor(img, gray_image, CV_BGR2GRAY);
             bool circle = calculate_if_circle(gray_image, m.threshold_value);
             bool square = calculate_if_square(gray_image, m.threshold_value);
             int surface_area = calculate_surface_area(gray_image, m.threshold_value);
-            cout << circle << "\t\t" << square << "\t\t" << surface_area << endl;
-            cout << "----------------------------------------------------" << endl;
-            cout << endl;
+            // cout << circle << "\t\t" << square << "\t\t" << surface_area << endl;
+            // cout << "----------------------------------------------------" << endl;
+            // cout << endl;
 
 
             // add to input_set
-            input_set[i][0] = (float) circle;
-            input_set[i][1] = (float) square;
-            input_set[i][2] = (float) surface_area;
+            input_set[i][0] = (double) circle;
+            input_set[i][1] = (double) square;
+            input_set[i][2] = (double) surface_area;
             output_set[i][m.id] = 1;
 
             i++;
             count++;
         }
-        cout << endl << endl;
+        // cout << endl << endl;
     }
     return make_pair(input_set, output_set);
 }
