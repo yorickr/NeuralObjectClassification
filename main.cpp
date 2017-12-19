@@ -55,6 +55,7 @@ int main(int argc, char** argv) {
 	TrainingSet s("./images/training_plaatjes/");
 	pair<Matrix,Matrix> out = s.compute();
 	cout << out.first << endl;
+	cout << out.second << endl;
 	// Mat img = imread("./images/training_plaatjes/dobbelsteen/dobbelsteen_0.jpg");
 	// Mat img = imread("./images/training_plaatjes/muntje/muntje_0.jpg");
 	// Mat img = s.image_groups.at(0).images.at(0);

@@ -112,7 +112,7 @@ Matrix Matrix::operator-(const Matrix &o) {
 
 Matrix Matrix::operator+(const Matrix &o) {
     if ((this->rows != o.rows) && (this->cols != o.cols)) {
-        cerr << "BOI WE AINT THE SAME SIZE IN OPERATOR- OF MATRIX" << endl;
+        cerr << "BOI WE AINT THE SAME SIZE IN OPERATOR+ OF MATRIX" << endl;
     }
     Matrix ret_val(this->rows, this->cols);
 
@@ -126,6 +126,7 @@ Matrix Matrix::operator+(const Matrix &o) {
 
 
 ostream& operator<<(ostream & out, const Matrix &data) {
+    out << "Rows " << data.rows << " cols " << data.cols << endl;
     for (size_t i = 0; i < data.rows; i++) {
         for (size_t j = 0; j < data.cols; j++) {
             out << data.mat[i][j] << "\t";

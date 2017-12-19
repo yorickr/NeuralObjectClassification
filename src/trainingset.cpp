@@ -51,16 +51,12 @@ TrainingSet::TrainingSet(std::string directoryPath) {
         }
     }
 
-    string last_label;
+    string last_label = get<0>(filePaths.at(0));
     int count = 0;
     vector<Mat> images;
     for (auto &m : filePaths) {
         string &label = get<0>(m);
         string &file_path = get<1>(m);
-        if (count == 0) {
-            last_label = label;
-            count++;
-        }
         if (strcmp(label.c_str(), last_label.c_str()) != 0) {
             // cout << "Label and last " << label << " " << last_label << endl;
             int thresh = 25;
@@ -72,14 +68,19 @@ TrainingSet::TrainingSet(std::string directoryPath) {
         }
         images.push_back(imread(file_path, CV_LOAD_IMAGE_COLOR));
     }
+    // catch the final one.
+    int thresh = 25;
+    image_groups.push_back(SetEntry(count, thresh, last_label, images)); // pass a copy;
 
 }
 
 pair<Matrix, Matrix> TrainingSet::compute() {
     int amount_of_features = 3;
-    int amount_of_images = image_groups.size() * image_groups.at(0).images.size();
+    int amount_of_objects = image_groups.size();
+    int amount_of_images = amount_of_objects * image_groups.at(0).images.size();
+
     Matrix input_set(amount_of_images, amount_of_features);
-    Matrix output_set(3,3);
+    Matrix output_set(amount_of_images, amount_of_objects);
     int i = 0;
     for (SetEntry &m : image_groups) {
         cout << "Going through SetEntry " << m.label << " " << m.id << " which has a thresh value of " << m.threshold_value << endl;
@@ -96,14 +97,16 @@ pair<Matrix, Matrix> TrainingSet::compute() {
             cout << circle << "\t\t" << square << "\t\t" << surface_area << endl;
             cout << "----------------------------------------------------" << endl;
             cout << endl;
-            count++;
+
 
             // add to input_set
             input_set[i][0] = (float) circle;
             input_set[i][1] = (float) square;
             input_set[i][2] = (float) surface_area;
+            output_set[i][m.id] = 1;
 
             i++;
+            count++;
         }
         cout << endl << endl;
     }
