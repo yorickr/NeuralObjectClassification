@@ -71,7 +71,7 @@ TrainingSet::TrainingSet(std::string directoryPath) {
         if (strcmp(label.c_str(), last_label.c_str()) != 0) {
             // cout << "Label and last " << label << " " << last_label << endl;
             int thresh = 25;
-            image_groups.push_back(SetEntry(count, thresh, label, images)); // pass a copy;
+            image_groups.push_back(SetEntry(count, thresh, last_label, images)); // pass a copy;
             images.clear();
 
             last_label = label;
@@ -82,7 +82,6 @@ TrainingSet::TrainingSet(std::string directoryPath) {
     // catch the final one.
     int thresh = 25;
     image_groups.push_back(SetEntry(count, thresh, last_label, images)); // pass a copy;
-
 }
 
 string TrainingSet::get_label(int i) {
@@ -158,65 +157,65 @@ int TrainingSet::calculate_surface_area(Mat &img, int thresh) {
 bool TrainingSet::calculate_if_square(Mat &img, int thresh) {
     Mat bin;
     threshold(img, bin, thresh, 255, THRESH_BINARY);
-    vector<vector<Point> > contours;
-    vector<Vec4i> hierarchy;
-    findContours( bin, contours, hierarchy, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE, Point(0, 0) ); // only find external contours.
+vector<vector<Point> > contours;
+vector<Vec4i> hierarchy;
+findContours(bin, contours, hierarchy, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE, Point(0, 0)); // only find external contours.
 
-    Mat drawing = Mat::zeros( bin.size(), CV_8UC3 );
-    for( size_t i = 0; i< contours.size(); i++ )
-    {
-        Scalar color( rand()&255, rand()&255, rand()&255 );
-        // drawContours( drawing, contours, i, color, FILLED, 8, hierarchy );
-    }
-    // imshow("Contour", drawing);
+//Mat drawing = Mat::zeros( bin.size(), CV_8UC3 );
+//for( size_t i = 0; i< contours.size(); i++ )
+//{
+//    Scalar color( rand()&255, rand()&255, rand()&255 );
+//    // drawContours( drawing, contours, i, color, FILLED, 8, hierarchy );
+//}
+// imshow("Contour", drawing);
 
-    vector<Point> approx;
-    vector<vector<Point>> squares;
+vector<Point> approx;
+vector<vector<Point>> squares;
 
-    // calculate squares.
-    for( size_t i = 0; i < contours.size(); i++ )
-    {
-        approxPolyDP(Mat(contours[i]), approx, arcLength(Mat(contours[i]), true)*0.02, true);
-        if(approx.size() == 4 && fabs(contourArea(Mat(approx))) > 1000 && isContourConvex(Mat(approx)) )
-        {
-            double maxCosine = 0;
+// calculate squares.
+for (size_t i = 0; i < contours.size(); i++)
+{
+	approxPolyDP(Mat(contours[i]), approx, arcLength(Mat(contours[i]), true)*0.02, true);
+	if (approx.size() == 4 && fabs(contourArea(Mat(approx))) > 1000 && isContourConvex(Mat(approx)))
+	{
+		double maxCosine = 0;
 
-            for( int j = 2; j < 5; j++ )
-            {
-                double cosine = fabs(angle(approx[j%4], approx[j-2], approx[j-1]));
-                maxCosine = MAX(maxCosine, cosine);
-            }
-            if( maxCosine < 0.3 )
-                squares.push_back(approx);
-        }
-    }
+		for (int j = 2; j < 5; j++)
+		{
+			double cosine = fabs(angle(approx[j % 4], approx[j - 2], approx[j - 1]));
+			maxCosine = MAX(maxCosine, cosine);
+		}
+		if (maxCosine < 0.3)
+			squares.push_back(approx);
+	}
+}
 
-    // drawing = Mat::zeros( bin.size(), CV_8UC3 );
+// drawing = Mat::zeros( bin.size(), CV_8UC3 );
 
-    // drawSquares(drawing, squares);
-    bool square = squares.size() > 0;
-    // cout << "Is square? " << square << endl;
-    return square;
+// drawSquares(drawing, squares);
+bool square = squares.size() > 0;
+// cout << "Is square? " << square << endl;
+return square;
 }
 
 bool TrainingSet::calculate_if_circle(Mat &img, int thresh) {
-    Mat gray_image(img);
-    // GaussianBlur( gray_image, gray_image, Size(9, 9), 2, 2 );
+	Mat gray_image(img);
+	// GaussianBlur( gray_image, gray_image, Size(9, 9), 2, 2 );
 
-    // Mat drawing = Mat::zeros(gray_image.size(), CV_8UC3);
-    vector<Vec3f> circles;
-    HoughCircles(gray_image, circles, HOUGH_GRADIENT, 1, 50, thresh, thresh*3, 30, 100);
-    for( size_t i = 0; i < circles.size(); i++ )
-    {
-        Vec3i c = circles[i];
-        // circle( drawing, Point(c[0], c[1]), c[2], Scalar(0,0,255), 3, LINE_AA);
-        // circle( drawing, Point(c[0], c[1]), 2, Scalar(0,255,0), 3, LINE_AA);
-    }
+	// Mat drawing = Mat::zeros(gray_image.size(), CV_8UC3);
+	vector<Vec3f> circles;
+	HoughCircles(gray_image, circles, HOUGH_GRADIENT, 1, 50, thresh, thresh * 3, 30, 100);
+	for (size_t i = 0; i < circles.size(); i++)
+	{
+		Vec3i c = circles[i];
+		// circle( drawing, Point(c[0], c[1]), c[2], Scalar(0,0,255), 3, LINE_AA);
+		// circle( drawing, Point(c[0], c[1]), 2, Scalar(0,255,0), 3, LINE_AA);
+	}
 
-    // imshow("Found circles", drawing);
-    bool circle = circles.size() > 0;
-    // cout << "Is circle? " << circle << endl;
-    return circle;
+	// imshow("Found circles", drawing);
+	bool circle = circles.size() > 0;
+	// cout << "Is circle? " << circle << endl;
+	return circle;
 }
 
 int TrainingSet::calculate_length(Mat & img, int thresh)
@@ -227,7 +226,7 @@ int TrainingSet::calculate_length(Mat & img, int thresh)
 	vector<vector<Point> > contours;
 	vector<Vec4i> hierarchy;
 	findContours(bin, contours, hierarchy, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE, Point(0, 0));
-	
+
 	auto contour = getGreatestVector(contours);
 	RotatedRect boundaryRotatedBox = minAreaRect(contour);
 
@@ -247,4 +246,25 @@ int TrainingSet::calculate_width(Mat & img, int thresh)
 	RotatedRect boundaryRotatedBox = minAreaRect(contour);
 
 	return boundaryRotatedBox.size.width;
+}
+
+double TrainingSet::calculate_bending_energy(Mat & img, int thresh)
+{
+	Mat bin;
+	threshold(img, bin, thresh, 255, THRESH_BINARY);
+
+	vector<vector<Point> > contours;
+	vector<Vec4i> hierarchy;
+	findContours(bin, contours, hierarchy, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE, Point(0, 0));
+/*
+	Mat drawing = Mat::zeros(bin.size(), CV_8UC3);
+	for (size_t i = 0; i < contours.size(); i++) {
+		drawContours(drawing, contours, (int)i, Scalar(rand() % 255, rand() % 255, rand() % 255));
+	}*/
+
+	auto contour = getGreatestVector(contours);
+
+	//imshow("Contour: " + to_string(contour.size()), drawing);
+
+	return bendingEnergy(contour);
 }
