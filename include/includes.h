@@ -21,7 +21,11 @@
 #include <time.h>
 
 #include <sys/types.h>
+#if defined(__APPLE__) || defined(__linux__)
+#include <dirent.h>
+#else
 #include "../include/dirent.h"
+#endif
 
 using namespace std;
 
