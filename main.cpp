@@ -10,6 +10,8 @@
 
 using namespace std;
 
+
+
 int main(int argc, char** argv) {
 	srand(time(NULL));
 	cout << boolalpha;
@@ -51,28 +53,18 @@ int main(int argc, char** argv) {
 	}
 
 	TrainingSet s("./images/training_plaatjes/");
-	// Mat img = imread("./images/training_plaatjes/dobbelsteen/dobbelsteen (6).jpg");
-	// if (!img.data)
-	// {
-	// 	cout << "Could not open or find the image" << endl;
-	// 	return -1;
-	// }
-	Mat img = get<1>(s.image_groups.at(0));
-	imshow("Image", img);
-	Mat gray_image;
-	cvtColor(img, gray_image, CV_BGR2GRAY);
-	imshow("Gray", gray_image);
-	waitKey(1);
-	Mat bin;
-	Mat bin_inv;
-	int thresh = 60;
-	while (true) {
-		cin >> thresh;
-		s.calculate_surface_area(gray_image, thresh);
-		waitKey(1);
+	pair<Matrix,Matrix> out = s.compute();
+	cout << out.first << endl;
+	cout << out.second << endl;
+	BPN guesser(out.first, out.second, 3);
+	// cout << guesser << endl;
+	bpn.train(100000);
+	for (size_t row = 0; row < 2; row++) {
+		Matrix r(out.first[row], true);
+		cout << "Input is " << endl;
+		cout << r.transpose() << endl;
+		guesser.guess(r);
 	}
-
-	// s.calculate_surface_area(img);
 
 	return 0;
 }

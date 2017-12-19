@@ -164,13 +164,14 @@ double BPN::guess(Matrix &input_row) {
     Matrix output_of_hidden_layer = calculate_output_hidden_layer(input_row, matrices.at(0));
     Matrix output_of_output_layer = calculate_output_output_layer(output_of_hidden_layer, matrices.at(1));
     cout << "My guess" << endl;
-    for (size_t i = 0; i < output_of_output_layer.rows; i++) {
-        for (size_t j = 0; j < output_of_output_layer.cols; j++) {
-            double val = output_of_output_layer[i][j];
-            cout << val;
-        }
-        cout << endl;
-    }
+    cout << output_of_output_layer.transpose() << endl;
+    // for (size_t i = 0; i < output_of_output_layer.rows; i++) {
+    //     for (size_t j = 0; j < output_of_output_layer.cols; j++) {
+    //         double val = output_of_output_layer[i][j];
+    //         cout << val;
+    //     }
+    //     cout << endl;
+    // }
 
     return 0.0f;
 }
