@@ -1,4 +1,4 @@
-#include "..\include\bendingEnergy.h"
+#include "../include/bendingEnergy.h"
 
 vector<int> find_chain(vector<Point> &contourVec, Point &start);
 pair<int, Point> find_first_neighbour(vector<Point> &vec, Point &start, vector<Point> &done);
@@ -45,7 +45,6 @@ double bendingEnergy(vector<Point>& contourVec)
 
 vector<int> find_chain(vector<Point> &contourVec, Point &start) {
 	vector<int> chain;
-	Point *first = &start;
 	Point *current = &start;
 	vector<Point> found;
 	found.push_back(start);

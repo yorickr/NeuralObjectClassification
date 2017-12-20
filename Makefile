@@ -10,8 +10,14 @@ OBJ_DIR=./
 
 INC=-I ./
 
+UNAME_S:=$(shell uname -s)
+ifeq ($(UNAME_S),Linux)
+	CV:=opencv
+else
+	CV:=OpenCV
+endif
 
-LIBS=$(shell pkg-config --libs --cflags OpenCV)
+LIBS=$(shell pkg-config --libs --cflags ${CV})
 
 CXXFLAGS+=$(INC)
 

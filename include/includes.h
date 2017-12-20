@@ -7,6 +7,7 @@
 #include <opencv2/calib3d.hpp>
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/videoio.hpp>
+#include <opencv2/ml.hpp>
 
 #include <iostream>
 #include <fstream>
@@ -25,6 +26,14 @@
 #include <dirent.h>
 #else
 #include "../include/dirent.h"
+#endif
+
+#ifdef min
+
+#undef min
+
+#undef max
+
 #endif
 
 using namespace std;

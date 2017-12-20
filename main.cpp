@@ -5,132 +5,166 @@
 #include "./include/trainingset.h"
 
 #include "./include/includes.h"
-#include "include\calibratie.h"
+#include "./include/calibratie.h"
 
 using namespace std;
 
 double mmPerPixel = -1;
 string cameraCalibrationFilePath = "C:\\School\\ueyecallib.yml";
+TrainingSet s("C:\\Users\\remco\\Documents\\School\\Minor robotics and vision\\Periode 2\\Vision c++ voor Gevorderden\\NeuralObjectClassification\\NeuralObjectClassification\\NeuralObjectClassification\\images\\training_plaatjes");
+Ptr<ml::ANN_MLP> mlp;
 
-void showFeatures() {
-	TrainingSet s("C:\\Users\\remco\\Documents\\School\\Minor robotics and vision\\Periode 2\\Vision c++ voor Gevorderden\\NeuralObjectClassification\\NeuralObjectClassification\\NeuralObjectClassification\\images\\training_plaatjes");
+bool sort_p (pair<float, int> i, pair<float, int> j) { return (i.first>j.first); }
 
-	for (int i = 0; i < s.image_groups.size(); i++) {
-		cout << s.image_groups[i].id << " : " << s.image_groups[i].label << endl;
+int runBasicTrainingSet() {
+	cout << endl;
+	
+	pair<Mat, Mat> out = s.compute(mmPerPixel);
+	Mat input = out.first;
+	Mat output = out.second;
+	cout << "Input testset" << endl;
+	cout << input << endl;
+	cout << "Output testset" << endl;
+	cout << output << endl;
+	int networkInputSize = input.cols;
+	int networkOutputSize = output.cols;
+	mlp = ml::ANN_MLP::create();
+	vector<int> layerSizes = { networkInputSize, 10, networkOutputSize };
+	mlp->setLayerSizes(layerSizes);
+	mlp->setActivationFunction(ml::ANN_MLP::SIGMOID_SYM);
+	mlp->setTrainMethod(ml::ANN_MLP::BACKPROP);
+	mlp->train(input, ml::ROW_SAMPLE, output);
+	cout << "MLP is trained: " << mlp->isTrained() << endl;
+
+	return 1;
+}
+
+int liveDetection() {
+	FeatureExtractor fe(mmPerPixel);
+	int amount_of_features = 9, i = 0;
+	if (!mlp->isTrained()) {
+		cout << "First train the mlp" << endl;
+		return -1;
 	}
-	cout << "Choose a trainingset" << endl;
 
-	int set, pictureId;
-	cin >> set;
+	VideoCapture capture = VideoCapture(1);
+	Mat frame, gray_image;
+	//frame = imread("C:/School/sizeOfPixel.jpg");
+	capture >> frame;
 
+	//check if oke
+
+	int thresh = 25;
 	while (true) {
-		cout << "Choose a picture: 0 and " << s.image_groups[set].images.size() - 1 << endl;
-		cin >> pictureId;
+		cvtColor(frame, gray_image, CV_BGR2GRAY);
 
-		while (pictureId < 0 || pictureId >= s.image_groups[set].images.size()) {
-			cout << "Picture id is out of range, choose again between 0 and " << s.image_groups[set].images.size() - 1 << endl;
-			cin >> pictureId;
+		int key = waitKey(1);
+		if (key == 27) break;
+		if (key == ' ') {
+			Mat input_set = Mat::zeros(Size(amount_of_features, 1), CV_32F);
+			bool circle = fe.calculate_if_circle(gray_image, thresh);
+			bool square = fe.calculate_if_square(gray_image, thresh);
+			int surface_area = fe.calculate_surface_area(gray_image, thresh);
+			int length = fe.calculate_length(gray_image, thresh);
+			int width = fe.calculate_width(gray_image, thresh);
+			double bending_energy = fe.calculate_bending_energy(gray_image, thresh);
+			double keypoint_count = fe.calculate_keypoints(gray_image, thresh);
+			double aspect_ratio = fe.calculate_aspect_ratio(gray_image, thresh);
+			double avg_gray = fe.calculate_average_gray_value(gray_image, thresh);
+
+			input_set.at<float>(i, 0) = (float)circle;
+			input_set.at<float>(i, 1) = (float)square;
+			input_set.at<float>(i, 2) = (float)surface_area;
+			input_set.at<float>(i, 3) = (float)length;
+			input_set.at<float>(i, 4) = (float)width;
+			input_set.at<float>(i, 5) = bending_energy;
+			input_set.at<float>(i, 6) = aspect_ratio;
+			input_set.at<float>(i, 7) = keypoint_count;
+			input_set.at<float>(i, 8) = avg_gray;
+			
+			Mat outp;
+			mlp->predict(input_set, outp);
+			cout << outp << endl;
+
+			int j = 0;
+
+			for (auto const &o : s.image_groups) {
+				cout << o.label << ", " << o.id << ", " << j << endl;
+				j++;
+			}
+			vector<pair<float, int>> vec;
+			float max = numeric_limits<float>::min();
+			int max_index = 0;
+			
+			for (int i = 0; i < outp.cols; i++) {
+				float val = outp.at<float>(0, i);
+				vec.push_back(make_pair(val, i));
+			}
+
+			sort(vec.begin(), vec.end(), sort_p);
+			for (size_t i = 0; i < 3; i++) {
+				max = vec[i].first;
+				max_index = vec[i].second;
+				if (i == 0) {
+					cout << "There is a " << (max * 100) << "% chance that this is a " << s.get_label(max_index) << endl;
+				}
+				else {
+					cout << "It could also be a " << s.get_label(max_index) << " with a " << (max * 100) << "% chance." << endl;
+				}
+
+			}	
 		}
 
-		Mat gray_image;
-		cvtColor(s.image_groups[set].images[pictureId], gray_image, CV_BGR2GRAY);
+		imshow("Live feed", frame);
 
-		imshow("Original gray image", gray_image);
-
-		cout << "Length: " << s.calculate_length(gray_image, 25) << endl;
-		cout << "Width: " << s.calculate_width(gray_image, 25) << endl;
-		cout << "Surface area: " << s.calculate_surface_area(gray_image, 25) << endl;
-		cout << "Is circle: " << s.calculate_if_circle(gray_image, 25) << endl;
-		cout << "Is square: " << s.calculate_if_square(gray_image, 25) << endl;
-		cout << "Bending energy: " << s.calculate_bending_energy(gray_image, 25) << endl;
-		cout << "Perimeter: " << s.calculate_perimeter(gray_image, 25) << endl;
-		cout << endl;
-
-		waitKey(0);
+		capture >> frame;
 	}
+
+	return 1;
+}
+
+void loadCalibrationData() {
+	FileStorage fs(cameraCalibrationFilePath, FileStorage::READ);
+	// callibratie data ophalen
+	Mat intrinsic, distCoeffs;
+	fs["intrinsic"] >> intrinsic;
+	fs["distCoeffs"] >> distCoeffs;
+	fs["mm_per_pixel"] >> mmPerPixel;
+
+	// callibratie matrices tonen op het scherm
+	cout << "intrinsic matrix: " << intrinsic << endl;
+	cout << "distortion coeffs: " << distCoeffs << endl;
+	cout << "mm per pixel: " << mmPerPixel << endl;
 }
 
 int main(int argc, char** argv) {
 	srand(time(NULL));
-	//cout << boolalpha;
-	//cout << "Running with the following args: ";
-	//for (int i = 1; i < argc; i++) {
-	//	cout << argv[i] << " ";
-	//}
+	cout << boolalpha;
 
-	//cout << endl;
-	//size_t size_input = 2;
-	//size_t size_hidden = 5;
-	//size_t size_output = 1;
-
-	//// 0 0 		0
-	//// 0 1 		0
-	//// 1 0 		0
-	//// 1 1 		1
-	//Matrix input(4, size_input);
-	//input.mat[1][1] = 1;
-	//input.mat[2][0] = 1;
-	//input.mat[3][0] = 1;
-	//input.mat[3][1] = 1;
-	//cout << endl << endl;
-	//cout << "Training input" << endl << input << endl;
-
-	//Matrix output(4, size_output);
-	//output.mat[3][0] = 1;
-	//cout << "Training expected output" << endl << output << endl;
-
-	//BPN bpn(input, output, size_hidden);
-	//// cout << bpn << endl;
-
-	//// bpn.train(10000);
-	//// cout << bpn << endl;
-
-	//for (size_t row = 0; row < input.rows; row++) {
-	//	Matrix r(input[row], true); // transpose
-	//	// bpn.guess(r);
-	//}
-
-	//TrainingSet s("./images/training_plaatjes/");
-	//pair<Matrix,Matrix> out = s.compute();
-	//cout << out.first << endl;
-	//cout << out.second << endl;
-	//BPN guesser(out.first, out.second, 3);
-	//// cout << guesser << endl;
-	//bpn.train(100000);
-	//for (size_t row = 0; row < 2; row++) {
-	//	Matrix r(out.first[row], true);
-	//	cout << "Input is " << endl;
-	//	cout << r.transpose() << endl;
-	//	guesser.guess(r);
-	//}
-	//calibrateCamera(cameraCalibrationFilePath);
-
-	/*
-	int result;
-	cout << "Do you want to calibrate the camera?" << endl;
-	cin >> result;
-	if (result == 1) { 
-		destroyAllWindows();
-	}
-
-	cout << "Millimeters per pixel calibration" << endl;
-	mmPerPixel = calibratePixelSize(cameraCalibrationFilePath);*/
+	loadCalibrationData();
 
 	string key;
 	while (true) {
-		cout << "Enter a key: c for calibration, r for item recornition, n for making a trainingset or q to quit" << endl;
+		cout << "Enter a key: c for calibration, r for item recornition, n for making a trainingset, t for training basic set or q to quit" << endl;
 		cin >> key;
 
-		if (key == "c") { 
-			calibrate(cameraCalibrationFilePath); 
+		if (key == "c") {
+			calibrate(cameraCalibrationFilePath);
 			cout << "Calibration done" << endl;
 			destroyAllWindows();
+			loadCalibrationData();
 			cin.ignore();
 		}
-		else if (key == "r") { cout << "live recornition" << endl; }
+		else if (key == "r") { 
+			liveDetection();
+			destroyAllWindows();
+		}
+		else if (key == "t") { runBasicTrainingSet(); }
 		else if (key == "n") { cout << "making a trainingset" << endl; }
 		else if (key == "q") { cout << "Good bye" << endl; break; }
 	}
 
 	return 0;
 }
+
+
