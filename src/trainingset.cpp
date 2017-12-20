@@ -100,7 +100,7 @@ Mat TrainingSet::get_image(int i) {
 }
 
 pair<Mat, Mat> TrainingSet::compute() {
-    int amount_of_features = 6;
+    int amount_of_features = 7;
     int amount_of_objects = image_groups.size();
     int amount_of_images = amount_of_objects * image_groups.at(0).images.size();
 
@@ -121,6 +121,7 @@ pair<Mat, Mat> TrainingSet::compute() {
             int length = calculate_length(gray_image, m.threshold_value);
             int width = calculate_width(gray_image, m.threshold_value);
             double bending_energy = calculate_bending_energy(gray_image, m.threshold_value);
+            double keypoint_count = calculate_keypoints(gray_image, m.threshold_value);
             // cout << "Image " << count << endl;
             // cout << "circle\t---\tsquare\t---\tsurface_area\t---\tlength\t---\twidth" << endl;
             // cout << "----------------------------------------------------" << endl;
@@ -136,6 +137,7 @@ pair<Mat, Mat> TrainingSet::compute() {
             input_set.at<float>(i, 3) = (float) length;
             input_set.at<float>(i, 4) = (float) width;
             input_set.at<float>(i, 5) = bending_energy;
+            input_set.at<float>(i, 6) = keypoint_count;
             output_set.at<float>(i, m.id) = (float) 1;
 
             // input_set[i][0] = (double) circle;
@@ -267,6 +269,27 @@ int TrainingSet::calculate_width(Mat & img, int thresh)
 	RotatedRect boundaryRotatedBox = minAreaRect(contour);
 
 	return boundaryRotatedBox.size.width;
+}
+
+double TrainingSet::calculate_keypoints(Mat &img, int thresh) {
+
+    SimpleBlobDetector::Params params;
+
+    // Change thresholds
+    params.minThreshold = thresh;
+    params.maxThreshold = 255;
+    vector<KeyPoint> keypoints;
+    Ptr<SimpleBlobDetector> detector = SimpleBlobDetector::create(params);
+    detector->detect( img, keypoints);
+
+    // Mat im_with_keypoints;
+	// drawKeypoints( img, keypoints, im_with_keypoints, Scalar(0,0,255), DrawMatchesFlags::DRAW_RICH_KEYPOINTS );
+    // cout << keypoints.size() << endl;
+	// Show blobs
+	// imshow("keypoints", im_with_keypoints );
+    // waitKey(300);
+
+    return (double) keypoints.size();
 }
 
 double TrainingSet::calculate_bending_energy(Mat & img, int thresh)

@@ -10,6 +10,8 @@
 
 using namespace std;
 
+bool sort_p (pair<float, int> i, pair<float, int> j) { return (i.first>j.first); }
+
 int main(int argc, char** argv) {
 	srand(time(NULL));
 	cout << boolalpha;
@@ -76,6 +78,17 @@ int main(int argc, char** argv) {
 	// }
 
 	TrainingSet s("./images/training_plaatjes/");
+	// Mat img = s.image_groups.at(1).images.at(0);
+	// int thresh = 60;
+	// while (true) {
+	// 	cin >> thresh;
+	// 	Mat gray_image;
+	// 	cvtColor(img, gray_image, CV_BGR2GRAY);
+	// 	imshow("Gray", gray_image);
+	// 	s.calculate_keypoints(gray_image, thresh);
+	// 	waitKey(30);
+	// }
+
 	pair<Mat,Mat> out = s.compute();
 	Mat input = out.first;
 	Mat output = out.second;
@@ -92,10 +105,10 @@ int main(int argc, char** argv) {
 	mlp->train(input, ml::ROW_SAMPLE, output);
 
 	cin.ignore();
-	for (size_t row = 0; row < input.rows; row++) {
+	for (int row = 0; row < input.rows; row++) {
 		Mat r = Mat::zeros( Size(input.cols, 1), CV_32F);
 		// cout << "input" << endl << input << endl;
-		for (size_t j = 0; j < input.cols; j++) {
+		for (int j = 0; j < input.cols; j++) {
 			float val = input.at<float>(row, j);
 			r.at<float>(0, j) = val;
 		}
@@ -103,38 +116,35 @@ int main(int argc, char** argv) {
 		Mat outp;
 		mlp->predict(r, outp);
 		cout << outp << endl;
+		vector<pair<float, int>> vec;
 		float max = numeric_limits<float>::min();
-		size_t max_index = 0;
-		for (size_t i = 0; i < outp.cols; i++) {
+		int max_index = 0;
+		// top 3;
+		vec.push_back(make_pair(max, max_index));
+		vec.push_back(make_pair(max, max_index));
+		vec.push_back(make_pair(max, max_index));
+
+		for (int i = 0; i < outp.cols; i++) {
 			float val = outp.at<float>(0, i);
-			if (val > max) {
-				max = val;
-				max_index = i;
-			}
+			vec.push_back(make_pair(val, i));
 		}
-		cout << "There is a " << (max * 100) << "% chance that this is a " << s.get_label(max_index) << endl;
+		sort(vec.begin(), vec.end(), sort_p);
+		for (size_t i = 0; i < 3; i++) {
+			max = vec[i].first;
+			max_index = vec[i].second;
+			if (i == 0) {
+				cout << "There is a " << (max * 100) << "% chance that this is a " << s.get_label(max_index) << endl;
+			} else {
+				cout << "It could also be a " << s.get_label(max_index) << " with a " << (max*100) << "% chance."<< endl;
+			}
+
+		}
 		cout << "Showing you the image" << endl;
 		imshow("Object", s.get_image(row));
 		waitKey(30);
 
 		cin.ignore();
 	}
-
-	// Matrix input = out.first;
-	// Matrix output = out.second;
-	// cout << "Training input" << endl << input << endl;
-	// cout << "Training output" << endl << output << endl;
-	// BPN guesser(input, output, 10);
-	// cout << guesser << endl;
-	// guesser.train(1000);
-	// cin.ignore();
-	// for (size_t row = 0; row < input.rows; row++) {
-	// 	Matrix r(input[row], true);
-	// 	cout << "Input is " << endl;
-	// 	cout << r.transpose() << endl;
-	// 	guesser.guess(r);
-	// 	cout << endl;
-	// }
 
 	return 0;
 }

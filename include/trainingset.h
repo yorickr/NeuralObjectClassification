@@ -45,6 +45,8 @@ class TrainingSet {
 		int calculate_length(Mat &img, int thresh);
 		int calculate_width(Mat &img, int thresh);
 
+        double calculate_keypoints(Mat &img, int thresh);
+
 		double calculate_bending_energy(Mat &img, int thresh);
 
 	private:
