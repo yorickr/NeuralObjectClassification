@@ -99,10 +99,12 @@ int main(int argc, char** argv) {
 	int networkInputSize = input.cols;
 	int networkOutputSize = output.cols;
 	Ptr<ml::ANN_MLP> mlp = ml::ANN_MLP::create();
-	vector<int> layerSizes = { networkInputSize, 4, networkOutputSize };
+	vector<int> layerSizes = { networkInputSize, 10, networkOutputSize };
 	mlp->setLayerSizes(layerSizes);
 	mlp->setActivationFunction(ml::ANN_MLP::SIGMOID_SYM);
+	mlp->setTrainMethod(ml::ANN_MLP::BACKPROP);
 	mlp->train(input, ml::ROW_SAMPLE, output);
+	cout << mlp->isTrained() << endl;
 
 	cin.ignore();
 	for (int row = 0; row < input.rows; row++) {

@@ -100,7 +100,7 @@ Mat TrainingSet::get_image(int i) {
 }
 
 pair<Mat, Mat> TrainingSet::compute() {
-    int amount_of_features = 7;
+    int amount_of_features = 9;
     int amount_of_objects = image_groups.size();
     int amount_of_images = amount_of_objects * image_groups.at(0).images.size();
 
@@ -122,6 +122,8 @@ pair<Mat, Mat> TrainingSet::compute() {
             int width = calculate_width(gray_image, m.threshold_value);
             double bending_energy = calculate_bending_energy(gray_image, m.threshold_value);
             double keypoint_count = calculate_keypoints(gray_image, m.threshold_value);
+            double aspect_ratio = calculate_aspect_ratio(gray_image, m.threshold_value);
+            double avg_gray = calculate_average_gray_value(gray_image, m.threshold_value);
             // cout << "Image " << count << endl;
             // cout << "circle\t---\tsquare\t---\tsurface_area\t---\tlength\t---\twidth" << endl;
             // cout << "----------------------------------------------------" << endl;
@@ -137,7 +139,9 @@ pair<Mat, Mat> TrainingSet::compute() {
             input_set.at<float>(i, 3) = (float) length;
             input_set.at<float>(i, 4) = (float) width;
             input_set.at<float>(i, 5) = bending_energy;
-            input_set.at<float>(i, 6) = keypoint_count;
+            input_set.at<float>(i, 6) = aspect_ratio;
+            input_set.at<float>(i, 7) = keypoint_count;
+            input_set.at<float>(i, 8) = avg_gray;
             output_set.at<float>(i, m.id) = (float) 1;
 
             // input_set[i][0] = (double) circle;
@@ -178,47 +182,12 @@ int TrainingSet::calculate_surface_area(Mat &img, int thresh) {
 
 // give this a gray_image
 bool TrainingSet::calculate_if_square(Mat &img, int thresh) {
-    Mat bin;
-    threshold(img, bin, thresh, 255, THRESH_BINARY);
-vector<vector<Point> > contours;
-vector<Vec4i> hierarchy;
-findContours(bin, contours, hierarchy, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE, Point(0, 0)); // only find external contours.
-
-//Mat drawing = Mat::zeros( bin.size(), CV_8UC3 );
-//for( size_t i = 0; i< contours.size(); i++ )
-//{
-//    Scalar color( rand()&255, rand()&255, rand()&255 );
-//    // drawContours( drawing, contours, i, color, FILLED, 8, hierarchy );
-//}
-// imshow("Contour", drawing);
-
-vector<Point> approx;
-vector<vector<Point>> squares;
-
-// calculate squares.
-for (size_t i = 0; i < contours.size(); i++)
-{
-	approxPolyDP(Mat(contours[i]), approx, arcLength(Mat(contours[i]), true)*0.02, true);
-	if (approx.size() == 4 && fabs(contourArea(Mat(approx))) > 1000 && isContourConvex(Mat(approx)))
-	{
-		double maxCosine = 0;
-
-		for (int j = 2; j < 5; j++)
-		{
-			double cosine = fabs(angle(approx[j % 4], approx[j - 2], approx[j - 1]));
-			maxCosine = MAX(maxCosine, cosine);
-		}
-		if (maxCosine < 0.3)
-			squares.push_back(approx);
-	}
-}
-
-// drawing = Mat::zeros( bin.size(), CV_8UC3 );
-
-// drawSquares(drawing, squares);
-bool square = squares.size() > 0;
-// cout << "Is square? " << square << endl;
-return square;
+    double aspect_ratio = calculate_aspect_ratio(img, thresh);
+    bool square = false;
+    if ((aspect_ratio < 1.15) && (aspect_ratio > 0.85)) {
+        square = true;
+    }
+    return square;
 }
 
 bool TrainingSet::calculate_if_circle(Mat &img, int thresh) {
@@ -290,6 +259,51 @@ double TrainingSet::calculate_keypoints(Mat &img, int thresh) {
     // waitKey(300);
 
     return (double) keypoints.size();
+}
+
+double TrainingSet::calculate_aspect_ratio(Mat &img, int thresh) {
+    Mat bin;
+    threshold(img, bin, thresh, 255, THRESH_BINARY);
+    vector<vector<Point> > contours;
+    vector<Vec4i> hierarchy;
+    findContours( bin, contours, hierarchy, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE, Point(0, 0) ); // only find external contours.
+
+    vector<Point> largest_contour;
+    // Mat drawing = Mat::zeros( bin.size(), CV_8UC3 );
+    int last_contour_area = numeric_limits<int>::min();
+    for( size_t i = 0; i< contours.size(); i++ )
+    {
+        // Scalar color( rand()&255, rand()&255, rand()&255 );
+        // drawContours( drawing, contours, i, color, FILLED, 8, hierarchy );
+        int area = contourArea(contours[i]);
+        if (area > last_contour_area) {
+            largest_contour = contours[i];
+            last_contour_area = area;
+        }
+    }
+
+    RotatedRect r = minAreaRect(largest_contour);
+    // cout << "Rect " << r.size << endl;
+    int max = r.size.width;
+    int min = r.size.height;
+    if (min > max) {
+        int temp = max;
+        max = min;
+        min = temp;
+    }
+    return (double)max / min;
+}
+
+double TrainingSet::calculate_average_gray_value(Mat &img, int thresh) {
+    int total = img.rows * img.cols;
+    double avg = 0.0;
+    for (int r = 0; r < img.rows; r++) {
+        for (int c = 0; c < img.cols; c++) {
+            avg += img.at<uchar>(r, c);
+        }
+    }
+
+    return (double) avg/total;
 }
 
 double TrainingSet::calculate_bending_energy(Mat & img, int thresh)

@@ -48,6 +48,8 @@ class TrainingSet {
         double calculate_keypoints(Mat &img, int thresh);
 
 		double calculate_bending_energy(Mat &img, int thresh);
+        double calculate_aspect_ratio(Mat &img, int thresh);
+        double calculate_average_gray_value(Mat &img, int thresh);
 
 	private:
 
