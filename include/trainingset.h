@@ -45,6 +45,7 @@ class TrainingSet {
 
 		double calculate_bending_energy(Mat &img, int thresh);
 
+		int calculate_perimeter(Mat &img, int thresh);
 	private:
 
 };

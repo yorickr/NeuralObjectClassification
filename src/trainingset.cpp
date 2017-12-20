@@ -268,3 +268,16 @@ double TrainingSet::calculate_bending_energy(Mat & img, int thresh)
 
 	return bendingEnergy(contour);
 }
+
+int TrainingSet::calculate_perimeter(Mat & img, int thresh)
+{
+	Mat bin;
+	threshold(img, bin, thresh, 255, THRESH_BINARY);
+
+	vector<vector<Point> > contours;
+	vector<Vec4i> hierarchy;
+	findContours(bin, contours, hierarchy, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE, Point(0, 0));
+
+	auto contour = getGreatestVector(contours);
+	return (int)contour.size();
+}
