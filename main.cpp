@@ -13,6 +13,7 @@ double mmPerPixel = -1;
 string cameraCalibrationFilePath = "C:\\School\\ueyecallib.yml";
 TrainingSet s("C:\\Users\\remco\\Documents\\School\\Minor robotics and vision\\Periode 2\\Vision c++ voor Gevorderden\\NeuralObjectClassification\\NeuralObjectClassification\\NeuralObjectClassification\\images\\training_plaatjes");
 Ptr<ml::ANN_MLP> mlp;
+Mat input;
 
 bool sort_p (pair<float, int> i, pair<float, int> j) { return (i.first>j.first); }
 
@@ -20,7 +21,7 @@ int runBasicTrainingSet() {
 	cout << endl;
 	
 	pair<Mat, Mat> out = s.compute(mmPerPixel);
-	Mat input = out.first;
+	input = out.first;
 	Mat output = out.second;
 	cout << "Input testset" << endl;
 	cout << input << endl;
@@ -123,6 +124,50 @@ int liveDetection() {
 	return 1;
 }
 
+void testTrainingsSet() {
+	for (int row = 0; row < input.rows; row++) {
+		Mat r = Mat::zeros(Size(input.cols, 1), CV_32F);
+		// cout << "input" << endl << input << endl;
+		for (int j = 0; j < input.cols; j++) {
+			float val = input.at<float>(row, j);
+			r.at<float>(0, j) = val;
+		}
+		cout << r << endl;
+		Mat outp;
+		mlp->predict(r, outp);
+		cout << outp << endl;
+		vector<pair<float, int>> vec;
+		float max = numeric_limits<float>::min();
+		int max_index = 0;
+		// top 3;
+		vec.push_back(make_pair(max, max_index));
+		vec.push_back(make_pair(max, max_index));
+		vec.push_back(make_pair(max, max_index));
+
+		for (int i = 0; i < outp.cols; i++) {
+			float val = outp.at<float>(0, i);
+			vec.push_back(make_pair(val, i));
+		}
+		sort(vec.begin(), vec.end(), sort_p);
+		for (size_t i = 0; i < 3; i++) {
+			max = vec[i].first;
+			max_index = vec[i].second;
+			if (i == 0) {
+				cout << "There is a " << (max * 100) << "% chance that this is a " << s.get_label(max_index) << endl;
+			}
+			else {
+				cout << "It could also be a " << s.get_label(max_index) << " with a " << (max * 100) << "% chance." << endl;
+			}
+
+		}
+		cout << "Showing you the image" << endl;
+		imshow("Object", s.get_image(row));
+		waitKey(30);
+
+		cin.ignore();
+	}
+}
+
 void loadCalibrationData() {
 	FileStorage fs(cameraCalibrationFilePath, FileStorage::READ);
 	// callibratie data ophalen
@@ -145,7 +190,7 @@ int main(int argc, char** argv) {
 
 	string key;
 	while (true) {
-		cout << "Enter a key: c for calibration, r for item recornition, n for making a trainingset, t for training basic set or q to quit" << endl;
+		cout << "Enter a key: c for calibration, r for item detection, t for training basic set, i for test trainingsset or q to quit" << endl;
 		cin >> key;
 
 		if (key == "c") {
@@ -160,7 +205,10 @@ int main(int argc, char** argv) {
 			destroyAllWindows();
 		}
 		else if (key == "t") { runBasicTrainingSet(); }
-		else if (key == "n") { cout << "making a trainingset" << endl; }
+		else if (key == "i") { 
+			testTrainingsSet(); 
+			destroyAllWindows();
+		}
 		else if (key == "q") { cout << "Good bye" << endl; break; }
 	}
 
